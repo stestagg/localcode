@@ -1,0 +1,19 @@
+# Seeded to /data/caddy/Caddyfile on first boot; edit it there and run
+# `rc-service caddy reload`.
+#
+# ":80" serves plain HTTP. Set SITE_ADDRESS to a hostname instead and caddy
+# will provision a certificate for it automatically.
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# Git pushes and LFS uploads are big; don't cap them.
+	request_body {
+		max_size 0
+	}
+
+	reverse_proxy 127.0.0.1:3000
+
+	log {
+		output file /data/caddy/log/access.log
+	}
+}

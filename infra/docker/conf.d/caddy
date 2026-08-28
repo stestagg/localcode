@@ -1,0 +1,11 @@
+# As above: no `net` service in a container, and `localmount` is keyworded
+# -docker so it never starts.
+rc_need="!net !localmount"
+
+# Read by /etc/init.d/caddy. The Caddyfile is seeded into /data on first boot
+# so it can be edited without rebuilding the image.
+caddy_opts="--config /data/caddy/Caddyfile --adapter caddyfile"
+
+# XDG_* is how caddy is told where to keep certificates and its autosaved
+# config; without them it would write to /var/lib/caddy.
+supervise_daemon_args="--env XDG_DATA_HOME=/data/caddy/data --env XDG_CONFIG_HOME=/data/caddy/config --stdout /data/caddy/log/caddy.log --stderr /data/caddy/log/caddy.log"
