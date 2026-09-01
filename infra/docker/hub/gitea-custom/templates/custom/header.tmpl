@@ -1,0 +1,43 @@
+{{/* Merge the localcode link into Gitea's navbar without replacing Gitea's
+     version-sensitive navigation template. */}}
+<style>
+	.localcode-bar {
+		position: absolute;
+		top: 0;
+		left: 66px;
+		z-index: 1001;
+		display: flex;
+		align-items: center;
+		height: 50px;
+		width: 80px;
+	}
+
+	.localcode-bar a {
+		display: flex;
+		align-items: center;
+		height: 36px;
+		padding: 0 13px;
+		color: var(--color-nav-text, var(--color-text, inherit));
+		text-decoration: none;
+	}
+
+	.localcode-bar a:hover {
+		color: var(--color-nav-hover-text, var(--color-primary, inherit));
+		background: var(--color-nav-hover-bg, transparent);
+		border-radius: var(--border-radius, 0.28571429rem);
+	}
+
+	/* Reserve the space occupied by the positioned Localcode link so Explore
+	   follows it naturally in Gitea's existing flex layout. */
+	#navbar .navbar-left > #navbar-logo {
+		margin-right: 80px;
+	}
+
+	/* Localcode provides the project and review surfaces. Keep Explore and all
+	   right-side controls; repository-level navigation remains unchanged. */
+	#navbar .navbar-left > a.item[href$="/issues"],
+	#navbar .navbar-left > a.item[href$="/pulls"],
+	#navbar .navbar-left > a.item[href$="/milestones"] {
+		display: none;
+	}
+</style>

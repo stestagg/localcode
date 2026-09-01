@@ -1,9 +1,0 @@
-# Docker has already brought the network up and nothing here provides `net`,
-# so drop the dependency rather than wait forever for it.
-rc_need="!net"
-
-# Read by /etc/init.d/gitea. Everything gitea writes lives under /data.
-GITEA_USER=gitea
-GITEA_CONF=/data/gitea/conf/app.ini
-GITEA_WORK_DIR=/data/gitea
-GITEA_LOG_FILE=/data/gitea/log/http.log

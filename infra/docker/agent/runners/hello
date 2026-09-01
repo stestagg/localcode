@@ -1,0 +1,8 @@
+#!/bin/sh
+# The smallest runner there is: enough to prove a container can clone, change
+# something and get it in front of a human as a pull request.
+set -eu
+
+printf -- '- hello from agent run %s\n' "${LOCALCODE_RUN_ID:-?}" >> hello.md
+
+echo "hello: appended a line to hello.md"

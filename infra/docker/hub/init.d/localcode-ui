@@ -1,0 +1,21 @@
+#!/sbin/openrc-run
+# The vite dev server, which caddy puts at the site root in dev mode. The ui
+# source is bind-mounted at /web, so vite's watcher reloads the browser on every
+# edit without the container going anywhere.
+supervisor=supervise-daemon
+
+name="localcode ui"
+description="vite dev server for the localcode web ui"
+
+command="/usr/local/bin/localcode-ui"
+pidfile="/run/${RC_SVCNAME}.pid"
+
+supervise_daemon_args="--chdir /web \
+    --env HOME=/root \
+    --env LOCALCODE_PORT=${LOCALCODE_PORT:-8080} \
+    --stdout /data/caddy/log/ui.log \
+    --stderr /data/caddy/log/ui.log"
+
+depend() {
+	before caddy
+}

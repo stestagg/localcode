@@ -1,0 +1,14 @@
+# As above: no `net` service in a container, and `localmount` is keyworded
+# -docker so it never starts.
+rc_need="!net !localmount"
+
+# Run as gitea: the entrypoint remaps that account onto the host user, so
+# everything either service writes into .localcode/state/ stays deletable.
+CADDY_USER=gitea
+
+# The entrypoint writes this file, choosing a template by LOCALCODE_UI_MODE.
+caddy_opts="--config /data/caddy/Caddyfile --adapter caddyfile"
+
+# XDG_* is how caddy is told where to keep certificates and its autosaved
+# config; without them it would write to /var/lib/caddy.
+supervise_daemon_args="--env XDG_DATA_HOME=/data/caddy/data --env XDG_CONFIG_HOME=/data/caddy/config --stdout /data/caddy/log/caddy.log --stderr /data/caddy/log/caddy.log"

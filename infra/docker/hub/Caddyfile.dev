@@ -1,0 +1,55 @@
+# As Caddyfile, but the ui comes from the vite dev server running alongside,
+# so an edit to the react source reloads the page without restarting anything.
+:80 {
+	encode zstd gzip
+
+	handle /config.json {
+		header Content-Type application/json
+		respond `{"ws": "/ws", "gitea": "/gitea/", "secret": "{$LOCALCODE_SECRET}"}` 200
+	}
+
+	handle /ws {
+		reverse_proxy {$LOCALCODE_WS_UPSTREAM}
+	}
+
+	# Anything that brought its own credentials -- the controller's API calls,
+	# an agent's clone and push -- authenticates as itself. Git's first smart
+	# HTTP request deliberately has no Authorization header: passing that request
+	# through anonymously makes Gitea challenge it, after which Git retries with
+	# its Basic credentials. A browser gets the human reverse-proxy identity.
+	# X-WEBAUTH-USER is always set or stripped, never trusted from the client.
+	@credentialed header Authorization *
+	@git header User-Agent git/*
+	@git_lfs header User-Agent git-lfs/*
+
+	redir /gitea /gitea/
+	handle_path /gitea/* {
+		# Git pushes and LFS uploads are big; don't cap them.
+		request_body {
+			max_size 0
+		}
+		route {
+			reverse_proxy @credentialed 127.0.0.1:3000 {
+				header_up -X-WEBAUTH-USER
+			}
+			reverse_proxy @git 127.0.0.1:3000 {
+				header_up -X-WEBAUTH-USER
+			}
+			reverse_proxy @git_lfs 127.0.0.1:3000 {
+				header_up -X-WEBAUTH-USER
+			}
+			reverse_proxy 127.0.0.1:3000 {
+				header_up X-WEBAUTH-USER human
+			}
+		}
+	}
+
+	# vite, including its own hot-reload socket at /@vite/client.
+	handle {
+		reverse_proxy 127.0.0.1:5173
+	}
+
+	log {
+		output file /data/caddy/log/access.log
+	}
+}

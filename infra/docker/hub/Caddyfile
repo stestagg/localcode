@@ -1,0 +1,63 @@
+# Everything the browser and the agents talk to arrives here.
+:80 {
+	encode zstd gzip
+
+	# How the ui learns where to connect and with what. Caddy is published on
+	# 127.0.0.1 only, so this sits behind the same boundary as the terminal
+	# that started the project.
+	handle /config.json {
+		header Content-Type application/json
+		respond `{"ws": "/ws", "gitea": "/gitea/", "secret": "{$LOCALCODE_SECRET}"}` 200
+	}
+
+	# The controller, on the host. reverse_proxy upgrades websockets itself.
+	handle /ws {
+		reverse_proxy {$LOCALCODE_WS_UPSTREAM}
+	}
+
+	# handle_path strips the prefix before proxying, and gitea puts it back when
+	# it builds links -- which is why its ROOT_URL has to end in /gitea/ too.
+	# Without the redirect, /gitea (no slash) would fall through to the ui.
+	# Anything that brought its own credentials -- the controller's API calls,
+	# an agent's clone and push -- authenticates as itself. Git's first smart
+	# HTTP request deliberately has no Authorization header: passing that request
+	# through anonymously makes Gitea challenge it, after which Git retries with
+	# its Basic credentials. A browser gets the human reverse-proxy identity.
+	# X-WEBAUTH-USER is always set or stripped, never trusted from the client.
+	@credentialed header Authorization *
+	@git header User-Agent git/*
+	@git_lfs header User-Agent git-lfs/*
+
+	redir /gitea /gitea/
+	handle_path /gitea/* {
+		# Git pushes and LFS uploads are big; don't cap them.
+		request_body {
+			max_size 0
+		}
+		route {
+			reverse_proxy @credentialed 127.0.0.1:3000 {
+				header_up -X-WEBAUTH-USER
+			}
+			reverse_proxy @git 127.0.0.1:3000 {
+				header_up -X-WEBAUTH-USER
+			}
+			reverse_proxy @git_lfs 127.0.0.1:3000 {
+				header_up -X-WEBAUTH-USER
+			}
+			reverse_proxy 127.0.0.1:3000 {
+				header_up X-WEBAUTH-USER human
+			}
+		}
+	}
+
+	# The built ui. try_files keeps client-side routes working on a reload.
+	handle {
+		root * /srv/ui
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output file /data/caddy/log/access.log
+	}
+}

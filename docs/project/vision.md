@@ -6,10 +6,11 @@ Work is serialized, but split across agents, each with a diferent concern.
 
 ## Brainstorm
 
- - Starting Roles: pm, developer, reviewer, qa
-    - localcode has agents built-in, but a specific project can add/override as required
+ - Personas describe perspective and attitude; roles describe task-specific work
+    - any persona can perform any role
+    - localcode has personas and roles built in, but a project can add or override them
     - .localcode/ top-level folder for all config, project data, and other metadata (everything except the actual source code)
- - Stories in the project dir (.localcode/pm/backlog/NN-xxxxxxxx.md) as markdown
+ - Stories in the project dir (.localcode/stories/backlog/NN-xxxxxxxx.md) as markdown
 
  - Most workflow actions implemented as tools (not direct drive by agent)
  - LLM via API (but local)
@@ -22,7 +23,7 @@ Work is serialized, but split across agents, each with a diferent concern.
 ### Architecture
  
  Code:
- - agents/ directory for each agent with instructions and metadata
+ - personas/ and roles/ directories containing reusable plain-Markdown instructions
  - tools/ implementation of workflow tools
  - core/  main loop and orchestration
 
@@ -30,7 +31,7 @@ Work is serialized, but split across agents, each with a diferent concern.
   - Container mangement
   - caddy, gitea, custom pages flask app, agent runtime (async python)
   - cli frontend shim
-  - agents & tools
+  - personas, roles & tools
   - 
 
 

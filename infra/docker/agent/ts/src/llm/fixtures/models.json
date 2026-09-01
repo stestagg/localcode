@@ -1,0 +1,9 @@
+{
+  "acme": {
+    "id": "acme",
+    "name": "Acme",
+    "npm": "@ai-sdk/acme",
+    "env": ["ACME_API_KEY"],
+    "models": { "a-model": { "id": "a-model" } }
+  }
+}

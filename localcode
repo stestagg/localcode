@@ -1,0 +1,25 @@
+#!/bin/sh
+# `localcode`, from anywhere, without a word about uv.
+#
+# Link it onto your PATH and it still works:
+#
+#   ln -s "$PWD/localcode" ~/.local/bin/localcode
+#
+# The working directory is left exactly as it was, because that is how every
+# command decides which project it means -- so this resolves the checkout it
+# lives in and points uv at that, rather than changing directory into it.
+set -eu
+
+self=$0
+# A symlink names the script, not this file; follow it to the real one. Every
+# hop can be relative to the link that named it, so each is resolved in turn.
+while [ -L "$self" ]; do
+    target=$(readlink "$self")
+    case $target in
+        /*) self=$target ;;
+        *) self=$(dirname "$self")/$target ;;
+    esac
+done
+root=$(cd "$(dirname "$self")" && pwd)
+
+exec uv run --project "$root" localcode "$@"

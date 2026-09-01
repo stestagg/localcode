@@ -1,0 +1,23 @@
+#!/bin/sh
+# Bring up vite against the bind-mounted ui source.
+#
+# node_modules is a docker volume layered over the mount, so the install
+# survives restarts and never lands in the host checkout.
+set -eu
+
+ui_lockfile=/web/package-lock.json
+ui_stamp=/web/node_modules/.localcode-package-lock.sha256
+ui_lock_hash="$(sha256sum "$ui_lockfile" | awk '{print $1}')"
+ui_installed_hash=""
+
+if [ -f "$ui_stamp" ]; then
+    read -r ui_installed_hash < "$ui_stamp"
+fi
+
+if [ ! -x /web/node_modules/.bin/vite ] || [ "$ui_installed_hash" != "$ui_lock_hash" ]; then
+    echo "localcode-ui: installing dependencies"
+    npm install --prefix /web --no-audit --no-fund
+    sha256sum "$ui_lockfile" | awk '{print $1}' > "$ui_stamp"
+fi
+
+exec npm --prefix /web run dev -- --host 127.0.0.1 --port 5173 --strictPort

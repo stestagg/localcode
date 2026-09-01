@@ -1,0 +1,9 @@
+# The build context is the repo root, for the ui source. Nothing else in here
+# belongs in an image.
+.git
+.venv
+__pycache__
+*.py[cod]
+web/node_modules
+web/dist
+infra/docker/agent/ts/node_modules
